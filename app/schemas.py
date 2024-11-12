@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import date
 
 # User Schemas
 class UserBase(BaseModel):
@@ -15,54 +15,37 @@ class UserRead(UserBase):
     class Config:
         orm_mode = True
 
+# Attachment Schemas
+class AttachmentBase(BaseModel):
+    file_name: str
+    file_size: Optional[int] = None
+    upload_status: Optional[str] = None
+
+class AttachmentCreate(AttachmentBase):
+    task_id: str
+
+class Attachment(AttachmentBase):
+    id: int
+    task_id: str
+
+    class Config:
+        orm_mode = True
 
 # Task Schemas
-# class TaskBase(BaseModel):
-#     title: str
-#     description: Optional[str] = None
-#     status: str = "To Do"        # Default status
-#     priority: Optional[int] = Field(None, ge=1, le=5, description="Priority level from 1 to 5")
-#     due_date: Optional[datetime] = None
+class TaskBase(BaseModel):
+    title: str
+    description: Optional[str] = None
+    status: Optional[str] = "To Do"
+    priority: Optional[int] = 1
+    due_date: Optional[date] = None
 
-# class TaskCreate(TaskBase):
-#     pass
+class TaskCreate(TaskBase):
+    pass
 
-# class TaskRead(TaskBase):
-#     id: int
-#     created_at: datetime
+class Task(TaskBase):
+    id: str
+    attachments: List[Attachment] = []
+    user_id: int
 
-#     class Config:
-#         orm_mode = True
-
-
-# # Comment Schemas
-# class CommentBase(BaseModel):
-#     content: str
-
-# class CommentCreate(CommentBase):
-#     pass
-
-# class CommentRead(CommentBase):
-#     id: int
-#     author: str
-#     timestamp: datetime
-
-#     class Config:
-#         orm_mode = True
-
-
-# # Attachment Schemas
-# class AttachmentBase(BaseModel):
-#     file_name: str
-#     size: int
-#     upload_status: str
-
-# class AttachmentCreate(AttachmentBase):
-#     pass
-
-# class AttachmentRead(AttachmentBase):
-#     id: int
-#     associated_task_id: int
-
-#     class Config:
-#         orm_mode = True
+    class Config:
+        orm_mode = True

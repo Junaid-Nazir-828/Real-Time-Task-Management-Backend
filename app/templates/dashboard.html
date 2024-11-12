@@ -1,26 +1,128 @@
-{% extends "base.html" %}
-
-{% block title %}Dashboard{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Dashboard{% endblock %} {% block
+content %}
 <h2>Task Dashboard</h2>
 
-<div id="tasks">
-    <h3>Your Tasks</h3>
-    <!-- List of tasks -->
-    {% for task in tasks %}
-        <div>
-            <h4>{{ task.title }} - {{ task.status }}</h4>
-            <p>{{ task.description }}</p>
-            <small>Due: {{ task.due_date }}</small>
-        </div>
-    {% endfor %}
-</div>
-
-
-<form id="logout-form" method="post" action="/auth/logout" style="display:inline;">
-    <button type="submit">Logout</button>
+<!-- Upload File Section -->
+<h3>Upload File in Chunks</h3>
+<form id="file-upload-form" enctype="multipart/form-data">
+  <input type="file" id="file-input" name="file" required />
+  <button type="submit">Upload File</button>
 </form>
 
-<a href="/upload_file">Upload File</a> | <a href="/notifications">View Notifications</a>
+<!-- Progress bar for upload -->
+<div id="progress-container" style="display: none">
+  <label for="progress">Upload Progress: </label>
+  <progress id="progress" value="0" max="100" style="width: 100%"></progress>
+  <span id="progress-text">0%</span>
+</div>
+
+<!-- Files List Section -->
+<h3>Available Files</h3>
+<div id="files-container"></div>
+
+<script>
+  const ws = new WebSocket("ws://127.0.0.1:8000/ws/notify");
+
+  ws.onmessage = function (event) {
+    alert(event.data); // Show an alert when receiving a message
+  };
+
+  ws.onopen = function () {
+    console.log("Connected to the WebSocket server");
+  };
+
+  ws.onclose = function () {
+    console.log("Disconnected from the WebSocket server");
+  };
+
+  const CHUNK_SIZE = 1024 * 1024; // 1MB per chunk
+
+  // Handle file upload form submission
+  document.getElementById("file-upload-form").onsubmit = async function (e) {
+    e.preventDefault();
+    const file = document.getElementById("file-input").files[0];
+    if (!file) {
+      alert("Please select a file.");
+      return;
+    }
+
+    try {
+      const initResponse = await fetch("/files/start-upload", {
+        method: "POST",
+        body: new FormData(document.getElementById("file-upload-form")),
+      });
+      const initResult = await initResponse.json();
+      if (!initResult.file_name) {
+        alert("Failed to initialize file upload.");
+        return;
+      }
+      const fileName = initResult.file_name;
+
+      document.getElementById("progress-container").style.display = "block";
+
+      let start = 0;
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      while (start < file.size) {
+        const chunk = file.slice(start, start + CHUNK_SIZE);
+        const formData = new FormData();
+        formData.append("file", chunk);
+
+        const response = await fetch(`/files/upload-chunk/${fileName}`, {
+          method: "PUT",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload chunk");
+        }
+
+        start += CHUNK_SIZE;
+        const progress = (start / file.size) * 100;
+        document.getElementById("progress").value = progress;
+        document.getElementById("progress-text").innerText = `${Math.round(
+          progress
+        )}%`;
+
+        console.log(
+          `Uploaded ${Math.min(start, file.size)} of ${file.size} bytes`
+        );
+      }
+
+      alert("File uploaded successfully!");
+      document.getElementById("progress-container").style.display = "none";
+
+      // Refresh the list of available files
+      fetchFiles();
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Error uploading file");
+    }
+  };
+
+  // Fetch and display the list of available files
+  async function fetchFiles() {
+    try {
+      const response = await fetch("/files/list");
+      const data = await response.json();
+
+      const filesContainer = document.getElementById("files-container");
+      filesContainer.innerHTML = ""; // Clear the current file list
+
+      data.files.forEach((fileName) => {
+        const fileLink = document.createElement("a");
+        fileLink.href = `/files/download/${fileName}`;
+        fileLink.innerText = fileName;
+        fileLink.download = fileName;
+        fileLink.style.display = "block";
+        filesContainer.appendChild(fileLink);
+      });
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  }
+
+  // Fetch the files list on page load
+  fetchFiles();
+</script>
+
 {% endblock %}

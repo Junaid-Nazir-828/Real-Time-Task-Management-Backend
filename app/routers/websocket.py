@@ -1,18 +1,36 @@
-from fastapi import APIRouter, WebSocket, Depends
-from fastapi_jwt_auth import AuthJWT
+# app/routes/websocket_routes.py
 
-router = APIRouter()
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from typing import List
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, Authorize: AuthJWT = Depends()):
-    await websocket.accept()
-    token = websocket.cookies.get("access_token")
-    if not token:
-        await websocket.close()
-        return
-    Authorize.jwt_required("websocket", token=token)
-    username = Authorize.get_jwt_subject()
+# WebSocket router instance
+websocket_router = APIRouter()
 
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Hello {username}, you received a new notification!")
+# Connection manager to keep track of active WebSocket connections
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+# Create a manager instance
+manager = ConnectionManager()
+
+# WebSocket endpoint for notifications
+@websocket_router.websocket("/ws/notify")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # Keeps connection open
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)

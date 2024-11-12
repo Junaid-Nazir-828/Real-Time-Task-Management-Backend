@@ -33,8 +33,3 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
     return response
-
-@router.post("/logout")
-async def logout(response: Response):
-    response.delete_cookie("access_token")  # Remove the JWT token from the cookies
-    return RedirectResponse(url="/")  # Redirect to login page after logout
