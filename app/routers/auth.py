@@ -5,9 +5,7 @@ from fastapi.responses import RedirectResponse
 from app.dependencies import get_db
 from app.schemas import UserCreate
 from app.crud import get_user_by_username, create_user, authenticate_user
-from app.utils.auth_utils import create_access_token, decode_access_token  # Custom functions from auth_utils
-import os
-from fastapi import Response
+from app.utils.auth_utils import create_access_token
 from fastapi.responses import RedirectResponse
 
 router = APIRouter()

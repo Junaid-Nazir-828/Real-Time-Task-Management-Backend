@@ -5,7 +5,6 @@ from fastapi.responses import JSONResponse
 
 CHUNK_SIZE = 1024 * 1024  # 1MB chunks
 
-# Ensure the upload folder exists
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
