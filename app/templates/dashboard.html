@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h2>Task Dashboard</h2>
+
+<div id="tasks">
+    <h3>Your Tasks</h3>
+    <!-- List of tasks -->
+    {% for task in tasks %}
+        <div>
+            <h4>{{ task.title }} - {{ task.status }}</h4>
+            <p>{{ task.description }}</p>
+            <small>Due: {{ task.due_date }}</small>
+        </div>
+    {% endfor %}
+</div>
+
+
+<form id="logout-form" method="post" action="/auth/logout" style="display:inline;">
+    <button type="submit">Logout</button>
+</form>
+
+<a href="/upload_file">Upload File</a> | <a href="/notifications">View Notifications</a>
+{% endblock %}

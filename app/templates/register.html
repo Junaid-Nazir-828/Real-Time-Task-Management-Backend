@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<h2>Register</h2>
+<form id="register-form" onsubmit="registerUser(event)">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    
+    <label for="password">Password:</label>
+    <input type="text" id="password" name="password" required>
+    
+    <button type="submit">Register</button>
+</form>
+
+<script>
+    async function registerUser(event) {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        
+        const response = await fetch("/auth/register", {  <!-- Update this URL -->
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        if (response.ok) {
+            alert("User registered successfully");
+            window.location.href = "/";
+        } else {
+            const errorData = await response.json();
+            alert(`Error: ${errorData.detail}`);
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+<!-- {% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<h2>Real-Time Notifications</h2>
+<div id="notifications">
+    <p>No notifications yet...</p>
+</div>
+
+<script>
+const ws = new WebSocket("ws://localhost:8000/ws");
+
+ws.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    const notificationsDiv = document.getElementById("notifications");
+    const newNotification = document.createElement("p");
+    newNotification.textContent = data.message;
+    notificationsDiv.appendChild(newNotification);
+};
+
+ws.onclose = function() {
+    console.log("WebSocket connection closed");
+};
+</script>
+{% endblock %} -->
